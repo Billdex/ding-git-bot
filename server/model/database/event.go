@@ -1,4 +1,4 @@
-package model
+package database
 
 type Event struct {
 	Id   int64  `xorm:"'id' autoincr"`

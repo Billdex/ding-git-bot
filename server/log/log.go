@@ -1,7 +1,7 @@
 package log
 
 import (
-	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
+	rotateLogs "github.com/lestrrat-go/file-rotatelogs"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"time"
@@ -81,19 +81,23 @@ func Fatalf(template string, args ...interface{}) {
 	logger.Fatalf(template, args)
 }
 
-func InitLog(style string, path string, level string) {
+func InitLog(style string, path string, level string) error {
 	encoder := getZapEncoder(style)
-	writeSyncer := getZapWriterSync(path)
+	writeSyncer, err := getZapWriterSync(path)
+	if err != nil {
+		return err
+	}
 	zapLevel := getZapLevel(level)
 	core := zapcore.NewCore(encoder, writeSyncer, zapLevel)
 	logger = zap.New(core, zap.AddCaller()).Sugar()
+	return nil
 }
 
 func Sync() {
 	logger.Sync()
 }
 
-//设定Zap编码格式
+// 设定Zap编码格式
 func getZapEncoder(style string) zapcore.Encoder {
 	cfg := zapcore.EncoderConfig{
 		TimeKey:       "time",
@@ -121,19 +125,21 @@ func getZapEncoder(style string) zapcore.Encoder {
 	}
 }
 
-//设定日志输出按天分割
-func getZapWriterSync(path string) zapcore.WriteSyncer {
-	hook, _ := rotatelogs.New(
+// 设定日志输出按天分割
+func getZapWriterSync(path string) (zapcore.WriteSyncer, error) {
+	hook, err := rotateLogs.New(
 		path+".%Y%m%d",
-		rotatelogs.WithLinkName(path),
-		rotatelogs.WithMaxAge(time.Hour*24*7),
-		rotatelogs.WithRotationTime(time.Hour*24),
+		rotateLogs.WithLinkName(path),
+		rotateLogs.WithMaxAge(time.Hour*24*7),
+		rotateLogs.WithRotationTime(time.Hour*24),
 	)
-
-	return zapcore.AddSync(hook)
+	if err != nil {
+		return nil, err
+	}
+	return zapcore.AddSync(hook), nil
 }
 
-//设定日志级别
+// 设定日志级别
 func getZapLevel(level string) zapcore.Level {
 	switch level {
 	case "DEBUG", "Debug", "debug":

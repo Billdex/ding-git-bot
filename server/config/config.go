@@ -8,7 +8,7 @@ type serverConfig struct {
 
 type dbConfig struct {
 	Host     string `ini:"host"`
-	Port     int    `ini:"poet"`
+	Port     int    `ini:"port"`
 	Database string `ini:"database"`
 	User     string `ini:"user"`
 	Password string `ini:"password"`
@@ -26,7 +26,7 @@ type appConfig struct {
 	Log      logConfig    `ini:"log"`
 }
 
-var AppConfig appConfig
+var AppConfig *appConfig
 
 func InitConfig() error {
 	cfg, err := ini.Load("./config/app.ini")
@@ -34,6 +34,7 @@ func InitConfig() error {
 		return err
 	}
 
+	AppConfig = new(appConfig)
 	err = cfg.MapTo(AppConfig)
 	if nil != err {
 		return err
